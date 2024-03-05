@@ -14,35 +14,34 @@ An addon for Pi-hole to only permit access (resolve DNS queries) for clients bet
 
 ## Pi-hole installed on Ubuntu/Debian (not in Docker)
 
-Edit permissions so you're allowed to manage the sqllite database:
-
 ```bash
-sudo usermod -G pihole $USER
+sudo su -
+
+echo "" >> /var/spool/cron/crontabs/root
+echo "# Pihole toggle allow traffic to timed access devices every ten minutes" >> /var/spool/cron/crontabs/root
+echo "*/10 * * * * /usr/bin/php /PATH-TO-REPO/toggle.php" >> /var/spool/cron/crontabs/root
+echo "" >> /var/spool/cron/crontabs/root
 ```
-
-- CRON
-
 
 ## Pi-hole installed using Docker
 
 ...
 
-
 # How to use
 
-Once the installation is complete, go to your Pi-hole control panel and click on `Groups`. Create a new group with the name `timed-access-0800-2000` (which means allow access between 8AM and 8PM), feel free to change these times to your requirements, or add multiple (the group name MUST be formatted as shown exactly).
+Once the installation is complete, go to your Pi-hole control panel and click on `Groups`. Create a new group with the name `allow-between-0800-2000` (which means allow access between 8AM and 8PM), feel free to change these times to your requirements, or add multiple (the group name MUST be formatted as shown exactly).
 
 ![Group](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/group.png?raw=true)
 
-Now on the Pi-hole control panel click on `Adlists` and add a new adlist with the address `*.*` and comment `block-everything` (again this name must be exact).
+Now on the Pi-hole control panel click on `Domains`, select the `Regex filter` tab and under `Regular Expression` type `(\.|^)`, and for `Comment` type `block-everything` (this comment and regular expression must be exact).
 
-![Adlist](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/adlist.png?raw=true)
+![Domain](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/domain.png?raw=true)
 
-Finally click on `Clients`, find the client you'd like to restrict access to (if they're not listed then you'll need to add them by MAC address a the top of this page)... click on `Group assignment` next to the client and ensure `timed-access-0800-2000` is checked.
+Finally click on `Clients`, find the client you'd like to restrict access to (if they're not listed then you'll need to add them by MAC address a the top of this page)... click on `Group assignment` next to the client and ensure `allow-between-0800-2000` is checked.
 
 ![Client](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/client.png?raw=true)
 
-That's it! The CRON job you've configured will now automatically toggle the access for this client on/off. You can assign as many groups and clients to this as you like and changing the times in the group will automatically be picked up by the script running it the background.
+That's it! The CRON job you've configured will now automatically toggle the access for this client on/off checking every ten minutes for a change. You can assign as many groups and clients to this as you like and changing the times in the group will automatically be picked up by the script running it the background.
 
 ## What is Pi-Hole
 
@@ -54,14 +53,20 @@ Read more about [Pi-hole here](https://github.com/pi-hole/pi-hole).
 
 The default location for log file is `/tmp/pihole-timed-access.log`, so look here first.
 
+For example:
+```log
+[2024-03-05 23:00:01] Nothing to do - 2300/800/2000 should be BLOCKING are be BLOCKING
+[2024-03-05 23:05:25] Removing block for domainlist id 5 from group id 4
+[2024-03-05 23:10:02] Nothing to do - 2310/800/2000 should be ALLOWING are be ALLOWING
+```
+
 ## Blocklist Project
 
 Additional helpful Adlists to enable can be found here, this is a great addition to further secure your network for parental control.
 
 # Notes
 
-- The `toggle.php` script must have write permission to sqllite dB or run as root.
-- The `Adlist` and `Group` must be named exactly right.
+... 
 
 # References
 

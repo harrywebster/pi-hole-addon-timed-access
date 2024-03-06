@@ -2,6 +2,13 @@
 
 An addon for Pi-hole to only permit access (resolve DNS queries) for clients between defined times of the day. Common use-case is for parents to limit access for their children on devices between given times of day.
 
+## TODO
+
+- Create groups/domainlist with times from and until from a config in the `toggle.php` script rather than having to do that manually.
+- Support for times on specific days of the week
+- Change documentation to run toggle as pihole user (or a user with the sqllite permission)
+- Proof of concept for limited number of active hours - pick a client to only have 1 hour of activity per day
+
 ## Prerequsites
 
 - Pi-hole installed and operating on your network.

@@ -1,23 +1,63 @@
 # Pi-hole addon "timed-access"
 
-An addon for Pi-hole to only permit access (resolve DNS queries) for clients between defined times of the day. Common use-case is for parents to limit access for their children on devices between given times of day.
+An addon for Pi-hole to only permit access (resolve DNS queries) for clients between defined times of the day. Common use-case is for parents to limit access for their children on devices between given times of day and days of the week.
 
-## TODO
+## Important
 
-- Create groups/domainlist with times from and until from a config in the `toggle.php` script rather than having to do that manually.
-- Support for times on specific days of the week
-- Change documentation to run toggle as pihole user (or a user with the sqllite permission)
-- Proof of concept for limited number of active hours - pick a client to only have 1 hour of activity per day
+- if you want to change times/days/names, delete manually first from pi-hole, then run the toggle script... it will clear and re-build all the groups.
+- any changes to the rules in config will require you to re-add clients to each group... it's like a factory reset.
 
 ## Prerequsites
 
 - Pi-hole installed and operating on your network.
 - SSH access to the Pi-hole server.
 - You must disable random MAC addresses on the devices your which to apply timed-access to (if the device is a laptop/PC then ensure you disable this on the WiFi and ethernet connections, for android and apple devices, Google will help you here).
-- When the `toggle.php` script runs to allow/block the traffic, the update isn't instant as the client will cache DNS lookups and if the client thinks the DNS server is down (which it will while blocking) then it'll take a few minutes for the block to be lifting to be realised by the device.
+- When the `toggle.php` script runs to allow/block the traffic, the update isn't instant as the client will cache DNS lookups and if the client thinks the DNS server is down (which it will while blocking) then it'll take a few minutes for the block to be lifting to be realised by the device... however in my experience it tends to happen pretty quickly.
 - Much like Pi-hole, this can be bypassed if the device supplies their own custom DNS servers (eg `8.8.8.8`)... To protect against this you should be restrict permission to update these details on the device.
+- It maybe important to note that for testing I am running Pi-hole on an Ubuntu 22.04 x86_64 server with DHCP server enabled and additional adlists provided by `Blocklist Project GitHub` (see link at the bottom).
 
 # Installation 
+
+Clone this git repository on the machine where you're running pi-hole and edit the `config.json` to your requirements. Be sure that the JSON file is valid and follow the docs to use all the falgs/switches you need.
+
+- `unique_prefix` this can be anything unique (alphanumeric) and is used to ensure when we create/delete records that we only affect records created by this tool, and no others you may have personally configured.
+- `log` log file path where a copy of the debugging will go, if omitted then no file logging will take place.
+- `pihole_path` path for the pi-hole PHP scripts, usually located `/var/www/html/admin/scripts/pi-hole/php/`
+- `rules` 
+  - `name`
+  - `time_from`
+  - `time_until`
+  - `days`
+  - `default_apply_block`
+
+```json
+{
+	"unique_prefix": "hw4d0n",
+	"pihole_path": "/var/www/html/admin/scripts/pi-hole/php/",
+	"log": "/tmp/pihole-timed.log",
+	"rules": [
+        {
+			"name": "children-pc",
+			"time_from": "1800",
+			"time_until": "2030",
+			"days": ["sat", "sun"]
+		},
+		{
+			"name": "children-tablet",
+			"time_from": "0800",
+			"time_until": "2000",
+			"days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+		},
+		{
+			"name": "children-tele-weekend",
+			"time_from": "0800",
+			"time_until": "2330",
+			"default_apply_block": true,
+			"days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+		}
+	]
+}
+```
 
 ## Pi-hole installed on Ubuntu/Debian (not in Docker)
 
@@ -26,29 +66,13 @@ sudo su -
 
 echo "" >> /var/spool/cron/crontabs/root
 echo "# Pihole toggle allow traffic to timed access devices every ten minutes" >> /var/spool/cron/crontabs/root
-echo "*/10 * * * * /usr/bin/php /PATH-TO-REPO/toggle.php" >> /var/spool/cron/crontabs/root
+echo "*/10 * * * * /usr/bin/php /PATH-TO-REPO/pihole-timed-access.php" >> /var/spool/cron/crontabs/root
 echo "" >> /var/spool/cron/crontabs/root
 ```
 
 ## Pi-hole installed using Docker
 
 ...
-
-# How to use
-
-Once the installation is complete, go to your Pi-hole control panel and click on `Groups`. Create a new group with the name `allow-between-0800-2000` (which means allow access between 8AM and 8PM), feel free to change these times to your requirements, or add multiple (the group name MUST be formatted as shown exactly).
-
-![Group](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/group.png?raw=true)
-
-Now on the Pi-hole control panel click on `Domains`, select the `Regex filter` tab and under `Regular Expression` type `(\.|^)`, and for `Comment` type `block-everything` (this comment and regular expression must be exact).
-
-![Domain](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/domain.png?raw=true)
-
-Finally click on `Clients`, find the client you'd like to restrict access to (if they're not listed then you'll need to add them by MAC address a the top of this page)... click on `Group assignment` next to the client and ensure `allow-between-0800-2000` is checked.
-
-![Client](https://github.com/harrywebster/pi-hole-addon-timed-access/blob/main/screenshot/client.png?raw=true)
-
-That's it! The CRON job you've configured will now automatically toggle the access for this client on/off checking every ten minutes for a change. You can assign as many groups and clients to this as you like and changing the times in the group will automatically be picked up by the script running it the background.
 
 ## What is Pi-Hole
 
@@ -74,6 +98,15 @@ Additional helpful Adlists to enable can be found here, this is a great addition
 # Notes
 
 ... 
+
+# Help or questions
+
+Please feel free to message me via GitHub for any support or feature requests.
+
+## TODO
+
+- Fix permissions so it doesn't need to run as root
+- Create POC for limited number of active hours - pick a client to only have 1 hour of activity per day for example
 
 # References
 

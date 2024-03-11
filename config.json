@@ -1,0 +1,21 @@
+{
+	"unique_prefix": "hw4d0n",
+	"pihole_path": "/var/www/html/admin/scripts/pi-hole/php/",
+	"log": "/tmp/pihole-timed.log",
+	"rules": [
+		{
+			"name": "children-tablet",
+			"time_from": "0800",
+			"time_until": "2000",
+			"days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+		},
+		{
+			"name": "children-tele-weekend",
+			"time_from": "0800",
+			"time_until": "2330",
+			"default_apply_block": true,
+			"days": ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+		}
+	]
+}
+	
